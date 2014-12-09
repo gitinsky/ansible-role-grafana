@@ -1,0 +1,10 @@
+---
+# - include: "{{ ansible_os_family }}.yml"
+# - include: "Debian.yml"
+# https://groups.google.com/forum/#!topic/ansible-project/PzA4Vb9SEmk
+
+- include: graphite.yml
+
+- include: grafana.yml
+
+- include: collectd.yml

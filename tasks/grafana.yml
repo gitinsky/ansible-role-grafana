@@ -1,0 +1,66 @@
+- name: import a repo key
+  apt_key: url=http://packages.elasticsearch.org/GPG-KEY-elasticsearch state=present
+
+- name: elasticsearch apt repo
+  apt_repository: repo='deb http://packages.elasticsearch.org/elasticsearch/1.0/debian stable main' state=present
+
+- name: npm repo add
+  apt_repository: repo='ppa:chris-lea/node.js' state=present update_cache=yes
+
+- name: Install grafana dependencies
+  apt: name={{ item }} state=latest update_cache=yes
+  with_items:
+      - elasticsearch
+      - openjdk-7-jdk
+      - git
+      - nodejs
+
+- name: elasticsearch config
+  template: src=grafana/elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml owner=root group=root mode=0644
+
+- name: start elasticsearch service
+  service: name=elasticsearch state=started
+
+- name: setup nginx
+  apt: name=nginx state=present
+
+- name: get grafana
+  git: repo=git://github.com/grafana/grafana.git dest=/usr/share/nginx/html/grafana accept_hostkey=yes
+  
+- name: do the installation magic
+  command: 'bash -c "cd /usr/share/nginx/html/grafana && npm install && npm install -g grunt-cli && grunt && grunt build && grunt release && grunt test"'
+  
+  sudo: yes
+- name: grafana config
+  template: src=grafana/config.js dest=/usr/share/nginx/html/grafana/src/config.js owner=root group=root mode=0644
+
+- name: start nginx
+  service: name=nginx state=started
+
+#- name: nginx config
+#  template: src=grafana/nginx.conf dest=/etc/nginx/nginx.conf owner=root group=root mode=0644
+#  notify: reload nginx
+
+- name: nginx site config
+  template: src=grafana/grafana dest=/etc/nginx/sites-available/grafana owner=root group=root mode=0644
+  notify: reload nginx
+  tags: nginx
+
+- name: enable the config
+  file: state=link src=/etc/nginx/sites-available/grafana dest=/etc/nginx/sites-enabled/grafana
+  notify: reload nginx
+  tags: nginx
+
+- name: basic auth
+  template: src=grafana/htpasswd.grafana dest=/etc/nginx/htpasswd.grafana owner=root group=root mode=0644
+  tags: nginx
+
+- name: nginx ES config
+  template: src=grafana/es-nginx dest=/etc/nginx/sites-available/elasticsearch owner=root group=root mode=0644
+  notify: reload nginx
+  tags: nginx
+
+- name: enable the ES config
+  file: state=link src=/etc/nginx/sites-available/elasticsearch dest=/etc/nginx/sites-enabled/elasticsearch
+  notify: reload nginx
+  tags: nginx

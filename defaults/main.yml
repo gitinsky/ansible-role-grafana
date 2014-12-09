@@ -1,0 +1,16 @@
+---
+graphite_retention_config_name: default
+graphite_retention_setting:     10s:2d,60s:14d,300s:60d,1200s:395d
+graphite_secret_key:            IIUwi2u78IHjwh2jy*YUHJhjhJHJGHJ
+graphite_admin_password:        choiWovDos
+graphite_http_port:             8000
+
+grafana_server_name:            grafana.local {{ ansible_eth0.ipv4.address }}
+grafana_server_name:            "{{ ansible_eth0.ipv4.address }}"
+grafana_index_name:             grafana-dash-default
+grafana_http_user:              admin
+grafana_http_hash:              Z3M1HuZTZRkdg
+grafana_http_port:              80
+# carbon_host: 
+es_password:                    grafana
+carbon_host:                    "{{ ansible_eth0.ipv4.address }}"

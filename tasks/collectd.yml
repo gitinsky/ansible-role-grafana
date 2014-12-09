@@ -1,0 +1,19 @@
+- name: download collectd
+  command: bash -c "cd /root && wget http://ns2.1888.spb.ru/collectd_5.4.1-1_amd64.deb" creates=/root/collectd_5.4.1-1_amd64.deb
+
+- shell: bash -c "dpkg -l collectd 2>&1; true"
+  register: collectd
+
+- name: install collectd
+  command: dpkg -i /root/collectd_5.4.1-1_amd64.deb
+  when: collectd.stdout.find('5.4.1-1') == -1
+
+- name: put collectd config file
+  template: src=collectd/collectd.conf dest=/opt/collectd/etc/collectd.conf owner=root group=root mode=0644
+
+- name: put collectd eye descriptor
+  template: src=collectd/collectd-eye.rb dest=/etc/eye/collectd.rb owner=root group=root mode=0644
+
+- name: load config in eye
+  command: bash -c "source /usr/local/rvm/scripts/rvm && eye l /etc/eye/apps.eye"
+  sudo: yes

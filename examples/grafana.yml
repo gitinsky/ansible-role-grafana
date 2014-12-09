@@ -1,0 +1,6 @@
+- hosts: grafana-hosts
+  sudo: yes
+  roles:
+    - role: grafana
+      # tags:
+      #   - grafana
