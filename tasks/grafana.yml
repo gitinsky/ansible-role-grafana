@@ -44,23 +44,33 @@
 - name: nginx site config
   template: src=grafana/grafana dest=/etc/nginx/sites-available/grafana owner=root group=root mode=0644
   notify: reload nginx
-  tags: nginx
+  tags:
+    - nginx
+    - config
 
 - name: enable the config
   file: state=link src=/etc/nginx/sites-available/grafana dest=/etc/nginx/sites-enabled/grafana
   notify: reload nginx
-  tags: nginx
+  tags:
+    - nginx
+    - config
 
 - name: basic auth
   template: src=grafana/htpasswd.grafana dest=/etc/nginx/htpasswd.grafana owner=root group=root mode=0644
-  tags: nginx
+  tags:
+    - nginx
+    - config
 
 - name: nginx ES config
   template: src=grafana/es-nginx dest=/etc/nginx/sites-available/elasticsearch owner=root group=root mode=0644
   notify: reload nginx
-  tags: nginx
+  tags:
+    - nginx
+    - config
 
 - name: enable the ES config
   file: state=link src=/etc/nginx/sites-available/elasticsearch dest=/etc/nginx/sites-enabled/elasticsearch
   notify: reload nginx
-  tags: nginx
+  tags:
+    - nginx
+    - config

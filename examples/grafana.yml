@@ -1,5 +1,7 @@
 - hosts: grafana-hosts
   sudo: yes
+  vars:
+    # grafana_https_enabled: true
   roles:
     - role: grafana
       # tags:

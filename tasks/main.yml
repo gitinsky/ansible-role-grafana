@@ -3,6 +3,30 @@
 # - include: "Debian.yml"
 # https://groups.google.com/forum/#!topic/ansible-project/PzA4Vb9SEmk
 
+- local_action: command
+                 python -c 'import crypt,sys,random;
+                 password=sys.argv[1];
+                 letters = "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789/.";
+                 pwhash = crypt.crypt(password, random.choice(letters) + random.choice(letters));
+                 print pwhash;
+                 ' "{{ es_password }}"
+  register: python_generated_password_hash
+  sudo: no
+  tags: debug
+  when: grafana_http_hash is not defined
+  tags: config
+#'
+
+- name: define grafana_http_hash
+  set_fact:
+    grafana_http_hash: "{{ python_generated_password_hash.stdout }}"
+  when: grafana_http_hash is not defined
+  tags: config
+
+- name: check http_hash
+  debug: var=grafana_http_hash
+  tags: config
+
 - include: graphite.yml
 
 - include: grafana.yml

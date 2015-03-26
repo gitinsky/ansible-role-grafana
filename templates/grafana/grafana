@@ -1,6 +1,56 @@
+# {{ ansible_managed }}
+
+{% if grafana_https_enabled -%}
+server {
+    listen 80;
+    server_name {{ grafana_server_name }};
+		
+		location /
+		{
+			return 301 https://$host:{{ grafana_https_port }}$request_uri;
+		}
+		
+    location /graphite/ {
+            proxy_pass         http://127.0.0.1:3080;
+            proxy_redirect     off;
+            proxy_set_header   Host             $host;
+            proxy_set_header   X-Real-IP        $remote_addr;
+            proxy_set_header   X-Forwarded-For  $remote_addr;
+
+            client_max_body_size       10m;
+
+            proxy_connect_timeout      90;
+            proxy_send_timeout         180;
+            proxy_read_timeout         180;
+    }
+
+    location /elasticsearch/ {
+            proxy_pass         http://127.0.0.1:19201;
+            proxy_redirect     off;
+            proxy_set_header   Host             $host;
+            proxy_set_header   X-Real-IP        $remote_addr;
+            proxy_set_header   X-Forwarded-For  $remote_addr;
+
+            client_max_body_size       10m;
+
+            proxy_connect_timeout      90;
+            proxy_send_timeout         180;
+            proxy_read_timeout         180;
+    }
+		
+}
+
+server {
+        listen {{ grafana_https_port }} ssl;
+
+        ssl on;
+        ssl_certificate /etc/ssl/certs/{{ ssl_name }}.crt;
+        ssl_certificate_key /etc/ssl/private/{{ ssl_name }}.key;
+{% else -%}
 server {
         listen   {{ grafana_http_port }}; ## listen for ipv4; this line is default and implied
         #listen   [::]:80 default ipv6only=on; ## listen for ipv6
+{%- endif %}
 
         root /usr/share/nginx/html/grafana/src;
         index index.html index.htm;
@@ -14,7 +64,9 @@ server {
         location / {
                 try_files $uri $uri/ /index.html;
         }
-
+				
+{% if not grafana_https_enabled -%}
+				
         location /graphite/ {
                 proxy_pass         http://127.0.0.1:3080;
                 proxy_redirect     off;
@@ -42,6 +94,7 @@ server {
                 proxy_send_timeout         180;
                 proxy_read_timeout         180;
         }
+{%- endif %}
 }
 
 server {

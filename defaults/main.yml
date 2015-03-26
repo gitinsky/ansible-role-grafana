@@ -9,8 +9,11 @@ grafana_server_name:            grafana.local {{ ansible_eth0.ipv4.address }}
 grafana_server_name:            "{{ ansible_eth0.ipv4.address }}"
 grafana_index_name:             grafana-dash-default
 grafana_http_user:              admin
-grafana_http_hash:              Z3M1HuZTZRkdg
-grafana_http_port:              80
-# carbon_host: 
 es_password:                    grafana
+grafana_http_port:              80
+grafana_https_port:             443
+grafana_https_enabled:          false
+# carbon_host: 
 carbon_host:                    "{{ ansible_eth0.ipv4.address }}"
+
+ssl_name: "{{ ansible_fqdn }}"
