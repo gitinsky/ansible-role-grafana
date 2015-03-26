@@ -7,8 +7,12 @@
 - name: npm repo add
   apt_repository: repo='ppa:chris-lea/node.js' state=present update_cache=yes
 
+- name: apt-get update
+  apt: update_cache=yes
+  ignore_errors: true
+
 - name: Install grafana dependencies
-  apt: name={{ item }} state=latest update_cache=yes
+  apt: name={{ item }} state=latest
   with_items:
       - elasticsearch
       - openjdk-7-jdk
