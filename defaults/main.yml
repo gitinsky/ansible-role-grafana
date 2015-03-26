@@ -13,6 +13,7 @@ es_password:                    grafana
 grafana_http_port:              80
 grafana_https_port:             443
 grafana_https_enabled:          false
+grafana_https_proxy_enabled:    false
 # carbon_host: 
 carbon_host:                    "{{ ansible_eth0.ipv4.address }}"
 

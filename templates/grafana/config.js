@@ -11,11 +11,11 @@ function (Settings) {
       datasources: {
         graphite: {
           type: 'graphite',
-          url: "http{{ 's' if grafana_https_enabled }}://{{ grafana_server_name }}/graphite",
+          url: "http{{ 's' if grafana_https_enabled or grafana_https_proxy_enabled }}://{{ grafana_server_name }}/graphite",
         },
         elasticsearch: {
           type: 'elasticsearch',
-          url: "http{{ 's' if grafana_https_enabled }}://{{ grafana_http_user }}:{{ es_password }}@{{ grafana_server_name }}/elasticsearch",
+          url: "http{{ 's' if grafana_https_enabled or grafana_https_proxy_enabled }}://{{ grafana_http_user }}:{{ es_password }}@{{ grafana_server_name }}/elasticsearch",
           index: 'grafana-dash',
           grafanaDB: true,
         }
