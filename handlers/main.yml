@@ -1,9 +1,0 @@
----
-- name: restart supervisor
-  service: name=supervisor state=restarted
-
-- name: reload nginx
-  service: name=nginx state=reloaded
-
-- name: apt-get update
-  command: bash -c "apt-get update"

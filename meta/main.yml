@@ -1,4 +1,0 @@
----
-dependencies:
-  - { role: eye }
-  - { role: certificates, ssl_cert_root: /etc/ssl, when: grafana_https_enabled }
