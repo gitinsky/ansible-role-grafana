@@ -9,3 +9,11 @@
 
 - name: start and autostart grafana-server
   service: name=grafana-server state=started enabled=yes
+
+- name: change http_port if required
+  ini_file: dest=/etc/grafana/grafana.ini
+            section=server
+            option=http_port
+            value={{ grafana_http_port }}
+            backup=yes
+  notify: restart grafana-server
