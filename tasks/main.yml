@@ -7,13 +7,58 @@
 - name: install grafana
   apt: name=grafana
 
+- name: change grafana settings if required
+  ini_file: dest=/etc/grafana/grafana.ini
+            section={{ item.s }}
+            option={{ item.o }}
+            value={{ item.v }}
+            backup=yes
+  with_items:
+      - { s: server, o: http_port, v: "{{ grafana_http_port }}" }
+      - { s: server, o: http_addr, v: "{{ grafana_http_addr }}" }
+      - { s: users,  o: auto_assign_org, v: "{{ grafana_auto_assign_org }}" }
+      - { s: server, o: root_url, v: "{{ grafana_root_url }}" }
+  notify: restart grafana-server
+
+
+- name: Set up github auth for grafana
+  ini_file: dest=/etc/grafana/grafana.ini
+            section={{ item.s }}
+            option={{ item.o }}
+            value={{ item.v }}
+            backup=yes
+  with_items:
+      - { s: auth.github, o: enabled, v: "true" }
+      - { s: auth.github, o: client_id, v: "{{ grafana_github_client_id }}" }
+      - { s: auth.github, o: client_secret, v: "{{ grafana_github_client_secret }}" }
+      - { s: auth.github, o: allow_sign_up, v: "{{ 'true' if grafana_github_allow_sign_up else 'false' }}" }
+      - { s: auth.github, o: scopes, v: "user:email" }
+      - { s: auth.github, o: auth_url, v: "https://github.com/login/oauth/authorize" }
+      - { s: auth.github, o: token_url, v: "https://github.com/login/oauth/access_token" }
+      - { s: auth.github, o: team_ids, v: "{% for id in grafana_github_team_ids %}{{ id }}{%if not loop.last %},{% endif %}{% endfor %}" }
+  notify: restart grafana-server
+  when: grafana_github_auth_enabled
+
+- name: check if default signing key is presented in a config file
+  shell: grep SW2YcwTIb9zpOOhoPsMm /etc/grafana/grafana.ini
+  failed_when: no
+  changed_when: grafana_security_issue.rc == 0
+  register: grafana_security_issue
+
+- name: generate uuid
+  shell: uuidgen
+  with_sequence: count=5
+  when: grafana_security_issue|changed
+  register: uuid
+
+- name: change grafana signing key
+  ini_file: dest=/etc/grafana/grafana.ini
+            section=security
+            option=secret_key
+            value={{ (uuid.results|random).stdout }}
+            backup=yes
+  when: grafana_security_issue|changed
+  notify: restart grafana-server
+
 - name: start and autostart grafana-server
   service: name=grafana-server state=started enabled=yes
-
-- name: change http_port if required
-  ini_file: dest=/etc/grafana/grafana.ini
-            section=server
-            option=http_port
-            value={{ grafana_http_port }}
-            backup=yes
-  notify: restart grafana-server
