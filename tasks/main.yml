@@ -4,6 +4,10 @@
 - name: add repo
   apt_repository: repo='deb https://packagecloud.io/grafana/stable/debian/ wheezy main' state=present update_cache=yes
 
+- name: block grafana from being installed from ubuntu repo
+  copy: content="Package{{':'}} grafana\nPin{{':'}} release o=Ubuntu\nPin-Priority{{':'}} -1\n"
+       dest=/etc/apt/preferences.d/grafana
+
 - name: install grafana
   apt: name=grafana
 
