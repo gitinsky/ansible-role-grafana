@@ -7,6 +7,7 @@
 - name: block grafana from being installed from ubuntu repo
   copy: content="Package{{':'}} grafana\nPin{{':'}} release o=Ubuntu\nPin-Priority{{':'}} -1\n"
        dest=/etc/apt/preferences.d/grafana
+  when: ansible_distribution_version|version_compare(16.04, '>=')
 
 - name: install grafana
   apt: name=grafana
