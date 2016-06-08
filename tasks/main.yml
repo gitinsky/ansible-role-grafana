@@ -10,7 +10,7 @@
   when: ansible_distribution_version|version_compare(16.04, '>=')
 
 - name: install grafana
-  apt: name=grafana
+  apt: name=grafana state={{'latest' if grafana_latest else 'present' }}
 
 - name: change grafana settings if required
   ini_file: dest=/etc/grafana/grafana.ini
@@ -23,6 +23,7 @@
       - { s: server, o: http_addr, v: "{{ grafana_http_addr }}" }
       - { s: users,  o: auto_assign_org, v: "{{ grafana_auto_assign_org }}" }
       - { s: server, o: root_url, v: "{{ grafana_root_url }}" }
+      - { s: auth.basic, o: enabled, v: "{{ 'true' if grafana_basic_auth_enabled else 'false' }}" }
   notify: restart grafana-server
 
 
