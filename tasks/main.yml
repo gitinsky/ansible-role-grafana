@@ -1,16 +1,9 @@
-- name: add pgp key
-  apt_key: url=https://packagecloud.io/gpg.key
-  
-- name: add repo
-  apt_repository: repo='deb https://packagecloud.io/grafana/stable/debian/ wheezy main' state=present update_cache=yes
+---
+- include: rhel_repo.yml
+  when: "{{ ansible_pkg_mgr == 'yum' }}"
 
-- name: block grafana from being installed from ubuntu repo
-  copy: content="Package{{':'}} grafana\nPin{{':'}} release o=Ubuntu\nPin-Priority{{':'}} -1\n"
-       dest=/etc/apt/preferences.d/grafana
-  when: ansible_distribution_version|version_compare(16.04, '>=')
-
-- name: install grafana
-  apt: name=grafana state={{'latest' if grafana_latest else 'present' }}
+- include: debian_repo.yml
+  when: "{{ ansible_pkg_mgr == 'apt' }}"
 
 - name: change grafana settings if required
   ini_file: dest=/etc/grafana/grafana.ini
@@ -21,11 +14,8 @@
   with_items:
       - { s: server, o: http_port, v: "{{ grafana_http_port }}" }
       - { s: server, o: http_addr, v: "{{ grafana_http_addr }}" }
-      - { s: users,  o: auto_assign_org, v: "{{ grafana_auto_assign_org }}" }
-      - { s: server, o: root_url, v: "{{ grafana_root_url }}" }
       - { s: auth.basic, o: enabled, v: "{{ 'true' if grafana_basic_auth_enabled else 'false' }}" }
   notify: restart grafana-server
-
 
 - name: Set up github auth for grafana
   ini_file: dest=/etc/grafana/grafana.ini
@@ -68,3 +58,6 @@
 
 - name: start and autostart grafana-server
   service: name=grafana-server state=started enabled=yes
+
+- name: check grafana
+  wait_for: host="{{ '127.0.0.1' if grafana_http_addr == '0.0.0.0' else grafana_http_addr }}" port="{{ grafana_http_port }}"

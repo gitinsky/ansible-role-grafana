@@ -1,0 +1,12 @@
+- hosts: all
+  become: yes
+  gather_facts: no
+  pre_tasks:
+    - name: install python2
+      raw: test -e /usr/bin/python || apt install -y python-minimal
+      changed_when: false
+    - name: gather facts
+      setup:
+  roles:
+      - role: grafana
+        grafana_beta: no

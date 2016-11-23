@@ -1,0 +1,43 @@
+---
+- name: add grafana repo
+  yum_repository:
+    name: grafana
+    description: grafana repo
+    baseurl: "https://packagecloud.io/grafana/stable/el/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana"
+    gpgcheck: yes
+
+- name: add grafana test repo
+  yum_repository:
+    name: grafana_test
+    description: grafana repo
+    baseurl: "https://packagecloud.io/grafana/testing/el/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana"
+    gpgcheck: yes
+  when: "{{ grafana_beta }}"
+
+- name: remove grafana test repo
+  yum_repository:
+    name: grafana_test
+    description: grafana repo
+    baseurl: "https://packagecloud.io/grafana/testing/el/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana"
+    gpgcheck: yes
+    state: absent
+  when: "{{ not grafana_beta }}"
+  register: test_repo_deleted
+
+- name: remove grafana beta
+  yum: name=grafana state=absent
+  when: test_repo_deleted.changed
+
+- name: install grafana
+  yum: name=grafana state={{'latest' if grafana_latest else 'present' }} update_cache="{{ test_repo_deleted.changed }}"
+
+- name: check grafana version
+  shell: yum info grafana|grep -E '^\S+.*:'
+  changed_when: no
+  register: dpkg
+  
+- name: show grafana version
+  debug: msg={{ (dpkg.stdout|from_yaml).Version }}

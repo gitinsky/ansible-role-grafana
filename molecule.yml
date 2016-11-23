@@ -1,0 +1,46 @@
+---
+driver:
+  name: vagrant
+vagrant:
+  raw_config_args:
+    - "vm.network :private_network, type: \"dhcp\""
+  platforms:
+    - name: centos6
+      box: centos/6
+    - name: centos7
+      box: centos/7
+    - name: ubuntu.14.04
+      box: ubuntu/trusty64      
+    - name: ubuntu.16.04
+      box: ubuntu/xenial64
+  providers:
+    - name: virtualbox
+      type: virtualbox
+      options:
+        memory: 512
+        cpus: 1
+  instances:
+    - name: grafana-centos6
+      platform: centos/6
+      ansible_groups:
+        - vagrant
+    - name: grafana-centos7
+      platform: centos/7
+      ansible_groups:
+        - vagrant
+    - name: grafana-ubuntu14
+      platform: ubuntu/trusty64
+      ansible_groups:
+        - vagrant
+    - name: grafana-ubuntu16
+      platform: ubuntu/xenial64
+      ansible_groups:
+        - vagrant
+molecule:
+  test:
+    sequence:
+      - destroy
+      - syntax
+      - create
+      - converge
+      - idempotence

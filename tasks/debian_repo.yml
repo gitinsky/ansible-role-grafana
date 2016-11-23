@@ -1,0 +1,35 @@
+---
+- name: add pgp key
+  apt_key: url=https://packagecloud.io/gpg.key
+
+- name: add repo
+  apt_repository: repo='deb https://packagecloud.io/grafana/stable/debian/ jessie main' state=present update_cache=yes
+
+- name: add beta repo
+  apt_repository: repo='deb https://packagecloud.io/grafana/testing/debian/ jessie main' state=present update_cache=yes
+  when: "{{ grafana_beta }}"
+
+- name: remove beta repo
+  apt_repository: repo='deb https://packagecloud.io/grafana/testing/debian/ jessie main' state=absent update_cache=yes
+  when: "{{ not grafana_beta }}"
+  register: test_repo_deleted
+
+- name: remove grafana beta
+  apt: name=grafana state=absent
+  when: test_repo_deleted.changed
+
+- name: block grafana from being installed from ubuntu repo
+  copy: content="Package{{':'}} grafana\nPin{{':'}} release o=Ubuntu\nPin-Priority{{':'}} -1\n"
+       dest=/etc/apt/preferences.d/grafana
+  when: ansible_distribution_version|version_compare(16.04, '>=')
+
+- name: install grafana
+  apt: name=grafana state={{'latest' if grafana_latest else 'present' }}
+
+- name: check grafana version
+  shell: dpkg -s grafana|sed -r 's/"/\\"/g;s/^([^:]+):\s*(.*)$/"\1"{{':'}} "\2",/;tx;d;:x'|tr -d '\n'|sed -r 's/(.*),$/{\1}/'
+  changed_when: no
+  register: dpkg
+  
+- name: show grafana version
+  debug: msg={{ (dpkg.stdout|from_json).Version }}
